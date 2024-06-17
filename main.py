@@ -140,7 +140,9 @@ while True:
         print('Top 5 Best Guesses:')
         for num, (g, s) in enumerate(top_guesses, 1):
             print(f"{num}. {g}, score: {s:.2f}")
+        print()
         print(f"Total guesses so far: {get_guess_count(conn, user_id)}")
+        print("You can type 'quit' to exit the game, 'reveal' to see the answer or reset to reset the game with a new word!")
         print('---------------------------------------------------')
 
 if conn:

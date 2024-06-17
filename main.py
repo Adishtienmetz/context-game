@@ -42,9 +42,12 @@ def insert_guess(conn, user_id, guess, score):
 def reset_game(conn, user_id):
     target_word = fake.word()
     cur = conn.cursor()
+
     cur.execute("UPDATE users SET target_word=? WHERE id=?", (target_word, user_id))
     
     cur.execute("DELETE FROM guesses WHERE user_id=?", (user_id,))
+
+    cur.execute("UPDATE users SET guess_count=0 WHERE id=?", (user_id,))
     
     conn.commit()
     
@@ -74,6 +77,17 @@ def get_or_generate_target_word(conn, user_id):
         conn.commit()
         return target_word
 
+def get_guess_count(conn, user_id):
+    cur = conn.cursor()
+    cur.execute("SELECT guess_count FROM users WHERE id=?", (user_id,))
+    result = cur.fetchone()
+    return result[0] if result else 0
+
+def increment_guess_count(conn, user_id):
+    cur = conn.cursor()
+    cur.execute("UPDATE users SET guess_count = guess_count + 1 WHERE id=?", (user_id,))
+    conn.commit()
+
 conn = create_connection(database)
 
 print("Welcome to the Word Guessing Game!")
@@ -99,7 +113,7 @@ else:
 
 print(f"Welcome, {username}!")
 print("Try to guess the target word based on its semantic similarity.")
-print("You can type 'quit' to exit the game, or 'reveal' to see the answer!")
+print("You can type 'quit' to exit the game, 'reveal' to see the answer or reset to reset the game with a new word!")
 print('---------------------------------------------------')
 
 target_word = get_or_generate_target_word(conn, user_id)
@@ -112,7 +126,8 @@ while True:
     elif guess == "reveal":
         print(f"The answer was: {target_word}")
     elif guess == "reset":
-        target_word = reset_game(conn, user_id)
+        target_word = get_or_generate_target_word(conn, user_id)
+        reset_game(conn, user_id)
     elif guess == target_word:
         print('Congratulations! You guessed the word correctly!')
         target_word = reset_game(conn, user_id)
@@ -120,10 +135,12 @@ while True:
         score = 100 * semantic_similarity(target_word, guess)
         print(f"Guess score: {score:.2f}")
         insert_guess(conn, user_id, guess, score)
+        increment_guess_count(conn, user_id)
         top_guesses = fetch_top_guesses(conn, user_id)
         print('Top 5 Best Guesses:')
         for num, (g, s) in enumerate(top_guesses, 1):
             print(f"{num}. {g}, score: {s:.2f}")
+        print(f"Total guesses so far: {get_guess_count(conn, user_id)}")
         print('---------------------------------------------------')
 
 if conn:

@@ -21,10 +21,11 @@ def setup_database():
     database = "word_guessing_game.db"
 
     sql_create_users_table = """ CREATE TABLE IF NOT EXISTS users (
-                                id integer PRIMARY KEY,
-                                username text NOT NULL UNIQUE,
-                                target_word text
-                             ); """
+                                    id integer PRIMARY KEY,
+                                    username text NOT NULL UNIQUE,
+                                    target_word text,
+                                    guess_count integer DEFAULT 0
+                                 ); """
 
     sql_create_guesses_table = """ CREATE TABLE IF NOT EXISTS guesses (
                                     id integer PRIMARY KEY,
